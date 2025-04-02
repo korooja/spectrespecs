@@ -1,36 +1,28 @@
 ---
 services:
-  umami:
-    image: ghcr.io/umami-software/umami:postgresql-latest
-    ports:
-      - "3000:3000"
+  spectrespecs_app:
+    container_name: 'spectrespecs'
+    image: ghcr.io/umami-software/umami:mysql-latest
     environment:
-      DATABASE_URL: postgresql://umami:umami@db:5432/umami
-      DATABASE_TYPE: postgresql
+      DATABASE_URL: mysql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:3306/${DB_NAME}
+      DATABASE_TYPE: mysql
       APP_SECRET: replace-me-with-a-random-string
-    depends_on:
-      db:
-        condition: service_healthy
     init: true
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "curl http://localhost:3000/api/heartbeat"]
+      test: ["CMD-SHELL", "curl http://spectrespecs.test/api/heartbeat"]
       interval: 5s
       timeout: 5s
       retries: 5
-  db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: umami
-      POSTGRES_USER: umami
-      POSTGRES_PASSWORD: umami
-    volumes:
-      - umami-db-data:/var/lib/postgresql/data
-    restart: always
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-volumes:
-  umami-db-data:
+    networks:
+      spectrespecs:
+      nexus:
+        aliases:
+        - spectrespecs.test
+
+networks:
+  spectrespecs:
+    name: nexus_spectrespecs
+  nexus:
+    name: nexus
+    external: true
